@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Open Prison Education (OPE) Platform — Overview for Corrections Education Staff</title>
+<style>
+  :root{
+    --bg-1:#0b1d36;
+    --bg-2:#13315c;
+    --accent:#f5b700;
+    --accent-2:#4cc9f0;
+    --text:#f4f7fb;
+    --muted:#b8c5d6;
+    --card:rgba(255,255,255,0.06);
+    --card-border:rgba(255,255,255,0.12);
+    --good:#4ade80;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--text);background:#000}
+  .deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+  .slide{
+    position:absolute;inset:0;
+    background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);
+    padding:60px 80px;
+    display:flex;flex-direction:column;
+    opacity:0;transform:translateX(40px);
+    transition:opacity .55s ease,transform .55s ease;
+    pointer-events:none;
+    overflow-y:auto;
+  }
+  .slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
+  .slide.prev{transform:translateX(-40px)}
+  /* decorative bg shapes */
+  .slide::before{
+    content:"";position:absolute;top:-120px;right:-120px;
+    width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle,rgba(245,183,0,.18),transparent 70%);
+    pointer-events:none;
+  }
+  .slide::after{
+    content:"";position:absolute;bottom:-160px;left:-160px;
+    width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle,rgba(76,201,240,.12),transparent 70%);
+    pointer-events:none;
+  }
+
+  h1{font-size:3.2rem;font-weight:700;letter-spacing:-1px;margin-bottom:18px;line-height:1.1}
+  h2{font-size:2.2rem;font-weight:600;margin-bottom:24px;color:var(--accent);letter-spacing:-.5px}
+  h3{font-size:1.3rem;margin-bottom:12px;color:var(--accent-2)}
+  p,li{font-size:1.05rem;line-height:1.6;color:var(--muted)}
+  .lead{font-size:1.3rem;color:var(--text);max-width:900px;margin-bottom:24px;line-height:1.5}
+  .tag{display:inline-block;padding:6px 14px;border-radius:20px;background:rgba(245,183,0,.15);color:var(--accent);font-size:.85rem;font-weight:600;letter-spacing:.5px;margin-bottom:18px;border:1px solid rgba(245,183,0,.3)}
+
+  /* HUD: nav controls */
+  .hud{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:14px;
+    background:rgba(0,0,0,.5);backdrop-filter:blur(10px);
+    padding:10px 18px;border-radius:40px;
+    border:1px solid rgba(255,255,255,.1);
+    z-index:50;
+  }
+  .hud button{
+    background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.15);
+    width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+    display:flex;align-items:center;justify-content:center;transition:.2s;
+  }
+  .hud button:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+  .hud .counter{font-size:.9rem;color:var(--muted);min-width:60px;text-align:center}
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0%;z-index:60;transition:width .4s ease}
+
+  /* dots */
+  .dots{position:fixed;right:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:50}
+  .dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.2s;border:none}
+  .dot.active{background:var(--accent);transform:scale(1.4)}
+  .dot:hover{background:var(--accent-2)}
+
+  /* Grid layouts */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:20px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:20px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:20px}
+
+  .card{
+    background:var(--card);border:1px solid var(--card-border);
+    border-radius:14px;padding:24px;
+    transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;
+    cursor:default;
+  }
+  .card.interactive{cursor:pointer}
+  .card.interactive:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+  .card .icon{font-size:2.2rem;margin-bottom:12px;display:block}
+  .card h3{margin-bottom:8px}
+  .card p{font-size:.98rem;color:var(--muted)}
+  .card ul{margin-top:10px;padding-left:18px}
+  .card ul li{font-size:.92rem;margin-bottom:4px}
+
+  /* split layout */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;flex:1}
+  .split-text h2{margin-bottom:16px}
+  .split-visual{display:flex;align-items:center;justify-content:center}
+
+  /* architecture diagram */
+  .arch{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;margin-top:10px}
+  .arch-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%}
+  .arch-box{
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+    border-radius:10px;padding:14px 20px;min-width:160px;text-align:center;
+    transition:.3s;cursor:pointer;
+  }
+  .arch-box:hover{background:rgba(245,183,0,.15);border-color:var(--accent);transform:scale(1.04)}
+  .arch-box .label{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .arch-box .name{font-size:1rem;font-weight:600;color:var(--text);margin-top:4px}
+  .arch-arrow{font-size:1.4rem;color:var(--accent);opacity:.7}
+
+  /* feature list */
+  .feature-list{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .feature-item{
+    display:flex;gap:14px;align-items:flex-start;
+    padding:14px 18px;background:rgba(255,255,255,.04);
+    border-left:3px solid var(--accent);border-radius:8px;
+  }
+  .feature-item .ficon{font-size:1.4rem}
+  .feature-item .ftext strong{color:var(--text);display:block;margin-bottom:3px}
+  .feature-item .ftext span{font-size:.94rem;color:var(--muted)}
+
+  /* tabs (interactive) */
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{
+    padding:10px 18px;border-radius:8px;background:rgba(255,255,255,.06);
+    color:var(--muted);cursor:pointer;border:1px solid transparent;
+    font-size:.95rem;font-weight:500;transition:.2s;
+  }
+  .tab:hover{color:var(--text)}
+  .tab.active{background:var(--accent);color:#000;font-weight:600}
+  .tab-panel{display:none;animation:fadeIn .35s}
+  .tab-panel.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* badge row */
+  .badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 12px;border-radius:6px;
+    background:rgba(76,201,240,.12);border:1px solid rgba(76,201,240,.3);
+    color:var(--accent-2);font-size:.85rem;font-weight:500;
+  }
+
+  /* code-ish strip */
+  .codestrip{
+    font-family:'Consolas','Monaco',monospace;
+    background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);
+    border-radius:8px;padding:14px 18px;font-size:.88rem;color:#9ee493;
+    margin-top:14px;overflow-x:auto;
+  }
+  .codestrip .c{color:#6b7c93}
+  .codestrip .k{color:var(--accent)}
+
+  /* title slide */
+  .title-slide{justify-content:center;align-items:center;text-align:center}
+  .title-slide h1{font-size:4.5rem;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px}
+  .title-slide .subtitle{font-size:1.5rem;color:var(--muted);max-width:800px;margin-bottom:30px}
+  .title-slide .meta{color:var(--muted);font-size:.95rem;margin-top:40px}
+  .pulse{animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+  /* closing */
+  .links{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+  .links a{
+    color:var(--accent-2);text-decoration:none;font-size:1rem;
+    padding:10px 16px;background:rgba(76,201,240,.08);border-radius:8px;
+    border:1px solid rgba(76,201,240,.2);transition:.2s;
+    display:flex;align-items:center;gap:10px;
+  }
+  .links a:hover{background:rgba(76,201,240,.18);transform:translateX(4px)}
+  .links a .link-ico{display:inline-flex;width:22px;height:22px;flex-shrink:0;align-items:center;justify-content:center}
+  .links a .link-ico svg{width:20px;height:20px}
+
+  /* keyboard hint */
+  .khint{position:fixed;bottom:18px;left:18px;font-size:.78rem;color:var(--muted);opacity:.6;z-index:50}
+
+  /* topbar with controls */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;z-index:55;pointer-events:none;
+  }
+  .brand{display:flex;align-items:center;gap:12px;pointer-events:auto}
+  .brand-logo{
+    width:36px;height:36px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;color:#0b1d36;
+    font-weight:800;font-size:13px;letter-spacing:.5px;
+    box-shadow:0 8px 24px -8px rgba(245,183,0,.5);
+  }
+  .brand-text{font-weight:600;letter-spacing:.3px;color:var(--text);font-size:.95rem}
+  .brand-text small{display:block;font-size:.68rem;color:var(--muted);font-weight:500;letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
+  .controls{display:flex;gap:8px;align-items:center;pointer-events:auto}
+  .ctrl-btn{
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    color:var(--muted);width:36px;height:36px;border-radius:10px;
+    display:grid;place-items:center;cursor:pointer;transition:.2s;
+    font-size:14px;
+  }
+  .ctrl-btn:hover{background:rgba(255,255,255,.1);color:var(--text);border-color:rgba(255,255,255,.2)}
+  .ctrl-btn.active{background:rgba(245,183,0,.18);color:var(--accent);border-color:rgba(245,183,0,.4)}
+
+  /* Hero (title slide) layout with animated visual */
+  .hero{
+    display:grid;grid-template-columns:1.05fr .95fr;gap:60px;
+    align-items:center;flex:1;width:100%;min-height:0;
+  }
+  .hero-left{display:flex;flex-direction:column;align-items:flex-start;text-align:left}
+  .hero-left .tag{margin-bottom:18px}
+  .hero-left h1{font-size:4.2rem;text-align:left}
+  .hero-left .subtitle{text-align:left;margin-bottom:24px}
+  .hero-left .badge-row{justify-content:flex-start !important}
+  .hero-left .meta{text-align:left;margin-top:30px}
+
+  .hero-visual{
+    position:relative;height:min(560px,68vh);
+    display:grid;place-items:center;
+  }
+  .orbit{
+    position:absolute;border:1px dashed rgba(255,255,255,.18);
+    border-radius:50%;animation:spin 50s linear infinite;
+  }
+  .orbit.r1{width:78%;height:78%}
+  .orbit.r2{width:54%;height:54%;animation-duration:40s;animation-direction:reverse}
+  .orbit.r3{width:34%;height:34%;animation-duration:30s}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .core{
+    width:148px;height:148px;border-radius:30px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;
+    font-weight:800;font-size:34px;color:#0b1d36;letter-spacing:-1px;
+    box-shadow:0 30px 80px -20px rgba(245,183,0,.6),inset 0 0 0 1px rgba(255,255,255,.25);
+    position:relative;animation:float 6s ease-in-out infinite;
+  }
+  .core::after{
+    content:'';position:absolute;inset:-12px;border-radius:38px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    filter:blur(28px);opacity:.45;z-index:-1;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .node{
+    position:absolute;width:62px;height:62px;border-radius:18px;
+    display:grid;place-items:center;
+    background:rgba(11,29,54,.75);border:1px solid rgba(255,255,255,.18);
+    font-size:22px;
+    box-shadow:0 12px 40px -10px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04);
+    backdrop-filter:blur(10px);
+  }
+  .node .nlabel{
+    position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+    font-size:10px;color:var(--muted);
+    font-family:'Consolas','Monaco',monospace;
+    letter-spacing:1px;text-transform:uppercase;white-space:nowrap;
+  }
+  .node .si-node{width:28px;height:28px;display:block}
+  .feature-item .ficon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px}
+  .feature-item .ficon svg{width:22px;height:22px}
+  .feature-item .ficon.emoji{font-size:1.4rem;width:auto}
+  .arch-box .name{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  .arch-box .name svg{width:22px;height:22px;flex-shrink:0}
+  h2 .h2-ico{display:inline-block;vertical-align:-0.14em;margin-right:.32em;width:1.35em;height:1.35em}
+  h2 .h2-ico svg{display:block;width:100%;height:100%}
+  h2 .h2-ico.h2-emoji{display:inline-flex;align-items:center;justify-content:center;font-size:1.05em;line-height:1}
+  .links a .link-ico.link-emoji{width:auto;font-size:1.2rem;line-height:1}
+
+  /* Speaker notes panel */
+  .notes{
+    position:fixed;right:18px;bottom:78px;
+    width:380px;max-width:calc(100vw - 36px);
+    max-height:50vh;overflow-y:auto;
+    background:rgba(11,29,54,.96);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:16px;padding:18px;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
+    z-index:65;
+    transform:translateY(20px);opacity:0;pointer-events:none;
+    transition:all .25s ease;
+    backdrop-filter:blur(12px);
+  }
+  .notes.show{transform:none;opacity:1;pointer-events:auto}
+  .notes h5{
+    margin:0 0 10px;font-size:11px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent);font-weight:600;
+    font-family:'Consolas','Monaco',monospace;
+    display:flex;align-items:center;gap:8px;
+  }
+  .notes p{
+    margin:0 0 10px;font-size:.92rem;line-height:1.6;color:var(--text);
+  }
+  .notes p:last-child{margin:0}
+
+  /* Slide overview */
+  .overview{
+    position:fixed;inset:0;
+    background:rgba(11,29,54,.96);
+    backdrop-filter:blur(14px);
+    z-index:80;
+    display:none;
+    padding:70px 5vw 30px;
+    overflow-y:auto;
+  }
+  .overview.show{display:block}
+  .overview-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:18px;
+  }
+  .thumb{
+    aspect-ratio:16/10;
+    background:linear-gradient(135deg,rgba(245,183,0,.08),rgba(76,201,240,.06));
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:18px;cursor:pointer;
+    display:flex;flex-direction:column;justify-content:space-between;
+    transition:all .2s ease;
+    position:relative;
+  }
+  .thumb:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .thumb .tn{
+    position:absolute;top:10px;right:12px;
+    font-family:'Consolas','Monaco',monospace;
+    font-size:11px;color:var(--muted);
+  }
+  .thumb h4{
+    margin:0;font-size:15px;line-height:1.25;font-weight:600;color:var(--text);
+  }
+  .thumb p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+  @media (max-width:1024px){.overview-grid{grid-template-columns:repeat(2,1fr)}}
+
+  /* small screens */
+  @media (max-width:900px){
+    .slide{padding:40px 28px}
+    h1{font-size:2rem}.title-slide h1{font-size:2.6rem}
+    h2{font-size:1.5rem}
+    .grid-2,.grid-3,.grid-4,.split{grid-template-columns:1fr}
+    .hero{grid-template-columns:1fr;gap:24px}
+    .hero-visual{height:320px}
+    .hero-left h1{font-size:2.4rem}
+    .notes{width:auto;left:18px;right:18px}
+  }
+</style>
+</head>
+<body>
+<!-- Brand icons (Simple Icons): Canvas, Redis, Windows -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="icon-canvas" viewBox="0 0 24 24"><path fill="#E72429" d="M.4403 15.4142a13.7061 13.7061 0 0 1-.4362-3.4403 13.7 13.7 0 0 1 .4362-3.4401c1.7144.2103 3.0438 1.6686 3.0438 3.44 0 1.771-1.3287 3.23-3.0438 3.4404zm3.9728-3.4403c0 .6004.4866 1.0873 1.0872 1.0873.601 0 1.088-.487 1.088-1.0873s-.487-1.088-1.088-1.088c-.6006 0-1.0872.4876-1.0872 1.088zM23.56 8.5338c-1.7151.2103-3.044 1.6686-3.044 3.44 0 1.771 1.3289 3.23 3.044 3.4404a13.7313 13.7313 0 0 0 .436-3.4403c0-1.1883-.1518-2.3413-.436-3.4401zm-6.148 3.44c0 .6005.4865 1.0874 1.0877 1.0874.6002 0 1.088-.487 1.088-1.0873s-.4878-1.088-1.088-1.088c-.6012 0-1.0877.4876-1.0877 1.088zm-5.4347 8.5465c-1.7709 0-3.229 1.33-3.44 3.044a13.7364 13.7364 0 0 0 3.441.4357c1.1885 0 2.3403-.1515 3.44-.4357-.2107-1.714-1.6687-3.044-3.441-3.044zm.001-3.1046c-.6012 0-1.0878.4876-1.0878 1.0883s.4866 1.0882 1.0878 1.0882c.6 0 1.087-.4874 1.087-1.0882s-.487-1.0883-1.087-1.0883zm0-13.936c1.7713 0 3.2295-1.3292 3.4399-3.0438A13.7353 13.7353 0 0 0 11.9782 0c-1.1887 0-2.3412.1519-3.441.4359.211 1.7146 1.6691 3.0438 3.441 3.0438zm0 .9291c-.6012 0-1.0878.4866-1.0878 1.0876 0 .6002.4866 1.0876 1.0878 1.0876.6 0 1.087-.4874 1.087-1.0876 0-.601-.487-1.0876-1.087-1.0876zm6.032 13.5965c-1.2514 1.2523-1.344 3.2211-.2825 4.582a13.762 13.762 0 0 0 4.8636-4.8654c-1.3608-1.0597-3.3299-.9673-4.5812.2834zm-.6568-2.1948c-.425-.4245-1.1135-.4245-1.539 0-.4243.4252-.4243 1.1136 0 1.5383.4255.4253 1.114.4253 1.539 0 .424-.4247.424-1.1131 0-1.5383zM5.9648 5.9603c1.2516-1.2513 1.3437-3.2206.2825-4.5813a13.7677 13.7677 0 0 0-4.8644 4.8643c1.3612 1.0616 3.3306.9687 4.582-.283zm.6567.6572c-.424.4247-.424 1.1139 0 1.5383.4245.4246 1.114.4246 1.5382 0 .4248-.4244.4248-1.1136 0-1.5383-.4243-.4243-1.1137-.4243-1.5382 0zm15.9625-.3857a13.7597 13.7597 0 0 0-4.8637-4.8642c-1.0614 1.3609-.969 3.33.2823 4.5818 1.2517 1.2507 3.2204 1.3436 4.5814.2824zM17.346 8.1443c.4237-.4248.4237-1.1135 0-1.5383-.425-.4247-1.1145-.4247-1.5388 0-.4241.4248-.4241 1.1135 0 1.5383.4243.4243 1.1137.4243 1.5388 0zM1.3772 17.7087a13.763 13.763 0 0 0 4.8647 4.8654c1.0613-1.3608.9685-3.3297-.2833-4.5818-1.2512-1.251-3.2204-1.3436-4.5814-.2836zm5.2385-1.9115c-.4238.4247-.4238 1.1136 0 1.5384.425.4246 1.1141.4246 1.5382 0 .425-.4248.425-1.1137 0-1.5384-.4241-.4245-1.1131-.4245-1.5382 0z"/></symbol>
+    <symbol id="icon-redis" viewBox="0 0 24 24"><path fill="#FF4438" d="M22.71 13.145c-1.66 2.092-3.452 4.483-7.038 4.483-3.203 0-4.397-2.825-4.48-5.12.701 1.484 2.073 2.685 4.214 2.63 4.117-.133 6.94-3.852 6.94-7.239 0-4.05-3.022-6.972-8.268-6.972-3.752 0-8.4 1.428-11.455 3.685C2.59 6.937 3.885 9.958 4.35 9.626c2.648-1.904 4.748-3.13 6.784-3.744C8.12 9.244.886 17.05 0 18.425c.1 1.261 1.66 4.648 2.424 4.648.232 0 .431-.133.664-.365a100.49 100.49 0 0 0 5.54-6.765c.222 3.104 1.748 6.898 6.014 6.898 3.819 0 7.604-2.756 9.33-8.965.2-.764-.73-1.361-1.261-.73zm-4.349-5.013c0 1.959-1.926 2.922-3.685 2.922-.941 0-1.664-.247-2.235-.568 1.051-1.592 2.092-3.225 3.21-4.973 1.972.334 2.71 1.43 2.71 2.619z"/></symbol>
+    <symbol id="icon-windows" viewBox="0 0 24 24"><path fill="#0078D4" d="M0 0h11.377v11.372H0zm12.623 0H24v11.372H12.623zM0 12.623h11.377V24H0zm12.623 0H24V24H12.623z"/></symbol>
+  </defs>
+</svg>
+<div class="progress" id="progress"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-text">
+      Open Prison Education
+      <small>Platform Overview</small>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="ctrl-btn" id="btnNotes" title="Speaker notes (N)">📝</button>
+    <button class="ctrl-btn" id="btnOverview" title="Slide overview (O)">▦</button>
+    <button class="ctrl-btn" id="btnFull" title="Fullscreen (F)">⛶</button>
+  </div>
+</header>
+
+<div class="deck" id="deck">
+
+  <!-- 1. Title -->
+  <section class="slide title-slide active" data-notes="Welcome the audience. Frame the goal: by the end of this briefing you'll know what OPE is, what each component does, and how it serves incarcerated students and the staff who support them. You can pause for questions throughout, but plan to leave time at the end.">
+    <div class="hero">
+      <div class="hero-left">
+        <div class="tag pulse">◆ Open Source · Corrections-Appropriate · Offline-Capable</div>
+        <h1>Open Prison Education</h1>
+        <p class="subtitle">A secure, full-featured learning platform built specifically for incarcerated students, faculty, and staff.</p>
+        <div class="badge-row">
+          <span class="badge" style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-canvas"/></svg> Canvas LMS at the core</span>
+          <span class="badge">🔒 Security baked in</span>
+          <span class="badge">📡 Works offline</span>
+          <span class="badge">🛠 Operator-friendly</span>
+        </div>
+        <p class="meta">Use <strong>→</strong> to navigate · <strong>N</strong> notes · <strong>O</strong> overview · <strong>F</strong> fullscreen</p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="orbit r1"></div>
+        <div class="orbit r2"></div>
+        <div class="orbit r3"></div>
+        <div class="core">OPE</div>
+        <div class="node" style="top:8%;left:50%;transform:translateX(-50%)"><svg class="si-node" aria-hidden="true" width="28" height="28"><use href="#icon-canvas"/></svg><span class="nlabel">Canvas</span></div>
+        <div class="node" style="top:50%;right:6%;transform:translateY(-50%)">🎓<span class="nlabel">SMC</span></div>
+        <div class="node" style="bottom:8%;left:50%;transform:translateX(-50%)">🎓<span class="nlabel">OPE LMS</span></div>
+        <div class="node" style="top:50%;left:6%;transform:translateY(-50%)"><svg class="si-node" aria-hidden="true" width="28" height="28"><use href="#icon-windows"/></svg><span class="nlabel">Service</span></div>
+        <div class="node" style="top:22%;right:22%">🪪<span class="nlabel">Credential</span></div>
+        <div class="node" style="bottom:22%;left:22%">⌨️<span class="nlabel">Mgmt</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Why OPE -->
+  <section class="slide" data-notes="Corrections education is uniquely constrained: connectivity may be intermittent or policy-restricted, devices must enforce strict security, content must be reviewed and approved. Generic ed-tech doesn't fit. OPE was designed from the ground up for this environment — and it does it without enterprise licensing costs.">
+    <div class="tag">The Problem We're Solving</div>
+    <h2>Education behind the walls is hard — and it shouldn't be.</h2>
+    <p class="lead">Corrections facilities need real classroom tools, but commercial LMS products assume open internet, unmanaged devices, and trusted networks. OPE was built from the ground up for the opposite reality.</p>
+    <div class="grid-3">
+      <div class="card">
+        <span class="icon">📶</span>
+        <h3>Limited connectivity</h3>
+        <p>Network access is intermittent, restricted, or completely air-gapped in many facilities. Students still need to study every day.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🛡️</span>
+        <h3>Strict security policy</h3>
+        <p>Student devices must be locked down: approved network adapters only, controlled software, monitored activity, and verifiable compliance.</p>
+      </div>
+      <div class="card">
+        <span class="icon">💰</span>
+        <h3>Limited options and tight budgets</h3>
+        <p>Corrections education programs need enterprise capability without enterprise licensing if any options are available — OPE is open source and delivers both.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. What OPE Is -->
+  <section class="slide" data-notes="OPE has two halves. Server-side runs in your facility's data closet as a Docker stack with Canvas at the heart. Client-side runs on each student laptop. Everything else exists to make Canvas safe, sync'd, and usable when the network is down. The split is intentional — operators manage the server once; the laptop tools handle the hundreds of devices.">
+    <div class="tag">The Solution</div>
+    <h2>One platform, two halves: server and student device.</h2>
+    <div class="split" style="margin-top:10px">
+      <div>
+        <h3>🖥️ Server side</h3>
+        <p style="margin-bottom:16px">A Docker-based stack that gives each site a complete classroom: Canvas LMS, databases, caching, DNS, and optional offline learning libraries — all configured by a guided wizard.</p>
+        <div class="feature-list">
+          <div class="feature-item"><span class="ficon emoji">🎓</span><div class="ftext"><strong>OPE Server</strong><span>Containerized full-stack environment</span></div></div>
+          <div class="feature-item"><span class="ficon"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-canvas"/></svg></span><div class="ftext"><strong>Canvas LMS</strong><span>The student & faculty experience</span></div></div>
+          <div class="feature-item"><span class="ficon emoji">🎓</span><div class="ftext"><strong>SMC</strong><span>Admin console for users & content sync</span></div></div>
+          <div class="feature-item"><span class="ficon">🔎</span><div class="ftext"><strong>Approved URL search</strong><span>Curated entry point for the web</span></div></div>
+        </div>
+      </div>
+      <div>
+        <h3>💻 Student laptop side</h3>
+        <p style="margin-bottom:16px">Windows tools that prepare a device for a student, keep it compliant over time, and let the student keep working when the network is down.</p>
+        <div class="feature-list">
+          <div class="feature-item"><span class="ficon">🪪</span><div class="ftext"><strong>Credential app</strong><span>One-touch device onboarding</span></div></div>
+          <div class="feature-item"><span class="ficon"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-windows"/></svg></span><div class="ftext"><strong>OPE Service</strong><span>Persistent compliance enforcement</span></div></div>
+          <div class="feature-item"><span class="ficon emoji">⌨️</span><div class="ftext"><strong>Management CLI</strong><span>Day-to-day operator control plane</span></div></div>
+          <div class="feature-item"><span class="ficon emoji">🎓</span><div class="ftext"><strong>OPE LMS client</strong><span>Offline-capable Canvas desktop app</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Architecture overview -->
+  <section class="slide" data-notes="Spend about 90 seconds here. Walk top-to-bottom: the gateway is the front door; Canvas, SMC, offline content, and the approved-URL search page are the student-facing server apps; Postgres/Redis/DNS/NTP are infrastructure. Then cross the network into the laptop side — credential onboards, OPE Service enforces, mgmt diagnoses, OPE LMS is the student-facing app. Click any box to jump to the relevant component slide.">
+    <div class="tag">How the pieces fit</div>
+    <h2>System architecture at a glance</h2>
+    <p class="lead">Click any box to learn more about that component.</p>
+    <div class="arch">
+      <div class="arch-row">
+        <div class="arch-box" onclick="goToSlide(4)"><div class="label">Server</div><div class="name">🌐 OPE Gateway (nginx)</div></div>
+      </div>
+      <div class="arch-arrow">⇅</div>
+      <div class="arch-row">
+        <div class="arch-box" onclick="goToSlide(5)"><div class="label">LMS</div><div class="name"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-canvas"/></svg> Canvas</div></div>
+        <div class="arch-box" onclick="goToSlide(6)"><div class="label">Admin</div><div class="name">🎓 SMC</div></div>
+        <div class="arch-box" onclick="goToSlide(4)"><div class="label">Offline content</div><div class="name">📚 Khan / GCF / RACHEL</div></div>
+        <div class="arch-box" onclick="goToSlide(7)"><div class="label">Web</div><div class="name">🔎 Approved URLs</div></div>
+      </div>
+      <div class="arch-arrow">⇅</div>
+      <div class="arch-row">
+        <div class="arch-box" onclick="goToSlide(4)"><div class="label">Data</div><div class="name">🐘 PostgreSQL</div></div>
+        <div class="arch-box" onclick="goToSlide(4)"><div class="label">Cache</div><div class="name"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-redis"/></svg> Redis</div></div>
+        <div class="arch-box" onclick="goToSlide(4)"><div class="label">Local DNS / time</div><div class="name">🕒 DNS · NTP</div></div>
+      </div>
+      <div class="arch-arrow" style="margin:6px 0">═══════ network ═══════</div>
+      <div class="arch-row">
+        <div class="arch-box" onclick="goToSlide(8)"><div class="label">Laptop</div><div class="name">🪪 Credential</div></div>
+        <div class="arch-box" onclick="goToSlide(9)"><div class="label">Laptop</div><div class="name"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-windows"/></svg> OPE Service</div></div>
+        <div class="arch-box" onclick="goToSlide(10)"><div class="label">Laptop</div><div class="name">⌨️ mgmt.exe</div></div>
+        <div class="arch-box" onclick="goToSlide(11)"><div class="label">Laptop</div><div class="name">🎓 OPE LMS (Qt)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. OPE Server -->
+  <section class="slide" data-notes="The server is a Docker Compose stack but operators don't hand-author docker-compose — they edit config.yml or run setup.sh. Highlight that dependencies (gateway, DNS, Postgres) auto-resolve from the services list. Tab through to show the optional offline content apps — Khan Academy Lite, freeCodeCamp, RACHEL, CodeCombat — they are huge when internet is restricted.">
+    <div class="tag">Server Component 1 of 4</div>
+    <h2>🖥️ OPE Server — the containerized classroom</h2>
+    <p class="lead">A Docker-based stack that deploys a complete Canvas-centered learning environment from a single config file.</p>
+
+    <div class="tabs" data-group="server">
+      <div class="tab active" data-target="srv-1">Core services</div>
+      <div class="tab" data-target="srv-2">Additional services</div>
+      <div class="tab" data-target="srv-3">Setup & ops</div>
+      <div class="tab" data-target="srv-4">Requirements</div>
+    </div>
+
+    <div class="tab-panel active" id="srv-1">
+      <div class="grid-3">
+        <div class="card"><h3>ope-gateway</h3><p>Nginx reverse proxy with SSL termination — the single front door for all services.</p></div>
+        <div class="card"><h3>ope-canvas</h3><p>The Canvas LMS itself, with Rich Content Editor and math rendering services.</p></div>
+        <div class="card"><h3>ope-smc</h3><p>Student Management Console for user management and content sync.</p></div>
+        <div class="card"><h3>ope-postgresql</h3><p>The primary relational database backing Canvas and SMC.</p></div>
+        <div class="card"><h3>ope-redis</h3><p>High-speed cache used by Canvas for sessions and job queues.</p></div>
+        <div class="card"><h3>ope-dns · ope-ntp</h3><p>Local DNS resolution and time sync — critical in air-gapped environments.</p></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="srv-2">
+      <p>Optional learning libraries that run entirely offline, so students keep learning regardless of network state.</p>
+      <div class="grid-4" style="margin-top:18px">
+        <div class="card"><span class="icon">📐</span><h3>KA Lite</h3><p>Khan Academy offline.</p></div>
+        <div class="card"><span class="icon">📘</span><h3>GCFLearnFree</h3><p>Foundational skills content.</p></div>
+        <div class="card"><span class="icon">⚔️</span><h3>CodeCombat</h3><p>Coding through gameplay.</p></div>
+        <div class="card"><span class="icon">⌨️</span><h3>freeCodeCamp</h3><p>Web development curriculum.</p></div>
+        <div class="card"><span class="icon">🧪</span><h3>JS Bin</h3><p>Code playground.</p></div>
+        <div class="card"><span class="icon">📦</span><h3>RACHEL</h3><p>Curated offline library.</p></div>
+        <div class="card"><span class="icon">🌐</span><h3>OSN websites</h3><p>Approved web resources.</p></div>
+        <div class="card"><span class="icon">🗂️</span><h3>Git</h3><p>Local code repositories.</p></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="srv-3">
+      <h3>Deployment is a guided wizard, not a project.</h3>
+      <div class="feature-list">
+        <div class="feature-item"><span class="ficon">1️⃣</span><div class="ftext"><strong>Clone & run setup.sh</strong><span>Interactive wizard walks through network, passwords, and service selection.</span></div></div>
+        <div class="feature-item"><span class="ficon">2️⃣</span><div class="ftext"><strong>./up.sh starts everything</strong><span>Dependencies (DB, cache, gateway) are resolved automatically.</span></div></div>
+        <div class="feature-item"><span class="ficon">3️⃣</span><div class="ftext"><strong>Reconfigure anytime</strong><span>Edit config.yml or re-run setup; secrets stay in .secrets.yml outside version control.</span></div></div>
+        <div class="feature-item"><span class="ficon">4️⃣</span><div class="ftext"><strong>Backup tooling included</strong><span>Scripts for PostgreSQL/MySQL exports and Redis cache flushes ship with the repo.</span></div></div>
+      </div>
+      <div class="codestrip">
+        <span class="c"># spin up an OPE site</span><br>
+        <span class="k">git clone</span> github.com/open-prison-education/ope-server<br>
+        <span class="k">cd</span> ope-server && ./setup.sh && ./up.sh
+      </div>
+    </div>
+
+    <div class="tab-panel" id="srv-4">
+      <div class="grid-2">
+        <div class="card"><h3>Host OS</h3><p>Linux server (Ubuntu 20.04+ recommended).</p></div>
+        <div class="card"><h3>Runtime</h3><p>Docker Engine 20.10+, Docker Compose v2+, Python 3.6+.</p></div>
+        <div class="card"><h3>Memory</h3><p>16 GB RAM minimum.</p></div>
+        <div class="card"><h3>Storage</h3><p>500 GB+ (varies with content libraries selected).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Canvas -->
+  <section class="slide" data-notes="Canvas is the LMS used by most universities and many K-12 districts. Using it means students leaving custody have experience on real, transferable software. Instructors don't need bespoke training — drop in existing course shells. Open-source Canvas means no per-seat licensing, and we can adapt it to corrections policy.">
+    <div class="tag">Server Component 2 of 4</div>
+    <h2><span class="h2-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-canvas"/></svg></span>Canvas LMS — the experience students and faculty already know</h2>
+    <p class="lead">Rather than reinvent the LMS, OPE hosts the open-source Canvas LMS — the same platform used by colleges and K-12 districts worldwide.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>For students</h3>
+        <ul>
+          <li>Course pages, modules, assignments, files</li>
+          <li>Discussions and quizzes</li>
+          <li>Grades and feedback</li>
+          <li>A modern, familiar interface that builds digital literacy</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>For faculty</h3>
+        <ul>
+          <li>Standard Canvas authoring tools</li>
+          <li>SpeedGrader, rubrics, and analytics</li>
+          <li>Course import/export compatible with other Canvas systems</li>
+          <li>No new LMS to learn — drop in existing course shells</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Why it matters in corrections</h3>
+        <ul>
+          <li>Students leaving custody have used real-world software</li>
+          <li>Credits and content transfer cleanly to outside institutions</li>
+          <li>Open source means no per-seat licensing</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Integrated extras</h3>
+        <ul>
+          <li>Rich Content Editor (RCE) service</li>
+          <li>MathMan equation rendering</li>
+          <li>OAuth2 tokens issued for the desktop client</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. SMC -->
+  <section class="slide" data-notes="SMC is the admin tier — what staff actually use day to day. It also makes laptop credentialing scriptable: laptop tools fetch Canvas tokens from SMC, so there are no shared admin keys floating around. Call out the AD and WAMAP integrations and the media library (upload, conversion, approved video) so staff understand it's more than a Canvas wrapper.">
+    <div class="tag">Server Component 3 of 4</div>
+    <h2><span class="h2-ico h2-emoji" aria-hidden="true">🎓</span>Student Management Console (SMC)</h2>
+    <p class="lead">SMC is the operator-facing web console that plugs into Canvas and institutional workflows — the place staff actually spend their day.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>👥 User & enrollment management</h3>
+        <p>Create student and instructor accounts, manage enrollments, and align with onsite policy without needing Canvas admin-level expertise.</p>
+      </div>
+      <div class="card">
+        <h3>🔗 Institutional integrations</h3>
+        <p>Hooks into Active Directory, Canvas, and WAMAP.</p>
+      </div>
+      <div class="card">
+        <h3>🎬 Media library</h3>
+        <p>Approved educational video in one place — with tools for video upload, media and conversion.</p>
+      </div>
+      <div class="card">
+        <h3>🔑 Canvas token broker</h3>
+        <p>During laptop credentialing, SMC issues Canvas student access tokens to the device — no shared admin keys needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Approved URL Search -->
+  <section class="slide" data-notes="The approved URL search page is the curated front door to the open web — but only the parts your facility has approved. Think of it like a corrections-safe search experience. Combined with the offline content services (Khan Academy Lite, freeCodeCamp, etc.) it gives students meaningful research and supplementary learning without unrestricted internet.">
+    <div class="tag">Server Component 4 of 4</div>
+    <h2>🔎 Approved URL search — a safe front door to the web</h2>
+    <p class="lead">A curated entry point through which students reach only the educational web resources your facility has approved — reviewed once, reusable across cohorts.</p>
+    <div class="grid-2">
+      <div class="card">
+        <span class="icon">🔎</span>
+        <h3>Curated, not crawled</h3>
+        <p>Students see results from an allowlist your team controls — not the open internet.</p>
+      </div>
+      <div class="card">
+        <span class="icon">📚</span>
+        <h3>Pairs with offline content</h3>
+        <p>Khan Academy Lite, GCFLearnFree, freeCodeCamp, RACHEL, CodeCombat, JS Bin, and a local Git server run on the stack — so learning continues even when the gateway has no upstream path.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Credential -->
+  <section class="slide" data-notes="credential.exe is run once per laptop, as administrator — it's the 'imaging finish line.' After FOG images a generic Windows 10/11 laptop, this is what turns it into a corrections-grade student device. It validates BIOS lockdown, applies the security baseline, creates the student account, fetches the Canvas token, installs the OPE Service, and re-locks the device. Then the operator walks away.">
+    <div class="tag">Laptop Tool 1 of 4</div>
+    <h2>🪪 Credential — first-touch device onboarding</h2>
+    <p class="lead">A Windows provisioning tool (<code style="color:var(--accent)">credential.exe</code>) that takes a freshly imaged laptop and prepares it for a specific student, end to end.</p>
+    <div class="feature-list">
+      <div class="feature-item"><span class="ficon">✅</span><div class="ftext"><strong>Validates configuration</strong><span>Confirms BIOS lockdown, admin privileges, and a complete JSON config.</span></div></div>
+      <div class="feature-item"><span class="ficon">🛡️</span><div class="ftext"><strong>Applies security baselines</strong><span>Sets firewall rules, group policy, Defender exclusions, and registry-based settings for downstream services.</span></div></div>
+      <div class="feature-item"><span class="ficon">👤</span><div class="ftext"><strong>Creates the student account</strong><span>Verifies against Active Directory, then builds a locked-down Windows user profile.</span></div></div>
+      <div class="feature-item"><span class="ficon">🔑</span><div class="ftext"><strong>Authenticates with Canvas</strong><span>Fetches a Canvas access token from SMC and stores it securely for the desktop LMS client.</span></div></div>
+      <div class="feature-item"><span class="ficon"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-windows"/></svg></span><div class="ftext"><strong>Installs supporting services</strong><span>Drops the OPE Service into Windows, then re-locks the device so it ships ready for the student.</span></div></div>
+    </div>
+    <div class="codestrip">
+      <span class="c"># operator's workflow, abbreviated</span><br>
+      1) edit credential_config.json &nbsp;&nbsp;<span class="c">// student username, AD DN, approved NICs</span><br>
+      2) right-click credential.exe → <span class="k">Run as administrator</span><br>
+      3) review summary &amp; confirm &nbsp;&nbsp;<span class="c">// then walk away</span>
+    </div>
+  </section>
+
+  <!-- 10. OPE Service -->
+  <section class="slide" data-notes="The OPE Service is the always-on enforcer. After credentialing, this is what keeps the device in policy — reboots don't reset policy, this service does. It responds to USB events, scans NICs, takes scheduled screenshots, resets permissions. It also calls into mgmt.exe, so the same security logic is reachable from automation and from staff diagnostics.">
+    <div class="tag">Laptop Tool 2 of 4</div>
+    <h2><span class="h2-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-windows"/></svg></span>OPE Service — compliance that survives past day one</h2>
+    <p class="lead">A persistent Windows service (<code style="color:var(--accent)">OPEService.exe</code>) that runs in the background and makes sure the device <em>stays</em> in policy long after credentialing.</p>
+    <p style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px;font-size:.95rem;color:var(--muted)">
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>🕒 Scheduled tasks</h3>
+        <ul>
+          <li>Network interface scans (catch unapproved NICs)</li>
+          <li>Periodic screenshots for supervision</li>
+          <li>Registry & folder permission resets</li>
+          <li>Routine maintenance via shared mgmt routines</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>⚡ Event response</h3>
+        <ul>
+          <li>USB device plug / unplug events</li>
+          <li>Network adapter changes</li>
+          <li>Login events</li>
+          <li>Triggers automatic policy re-application</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>📝 Auditable</h3>
+        <p>All activity logs to <code style="color:var(--accent-2)">%PROGRAMDATA%\ope\logs\ope-service.log</code>, with adjustable verbosity for troubleshooting.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Management CLI -->
+  <section class="slide" data-notes="mgmt.exe is the operator's CLI. Don't be intimidated by the command line — staff mostly run it from documented runbooks. This is where day-to-day diagnostics live: approve a NIC, sync with SMC, take a screenshot, set log level, show live trace. The same commands are used by automation, so reproducing a problem is straightforward.">
+    <div class="tag">Laptop Tool 3 of 4</div>
+    <h2>⌨️ Management Tool — the operator control plane</h2>
+    <p class="lead"><code style="color:var(--accent)">mgmt.exe</code> is the command-line workhorse for day-to-day laptop operations. It's what credential.exe and OPE Service call under the hood — and what staff use directly for troubleshooting.</p>
+    <div class="tabs" data-group="mgmt">
+      <div class="tab active" data-target="mgmt-1">Common commands</div>
+      <div class="tab" data-target="mgmt-2">Capabilities</div>
+      <div class="tab" data-target="mgmt-3">Diagnostics</div>
+    </div>
+    <div class="tab-panel active" id="mgmt-1">
+      <div class="codestrip">
+        mgmt.exe <span class="k">config</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># initial setup</span><br>
+        mgmt.exe <span class="k">credential</span> &nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># run credentialing process</span><br>
+        mgmt.exe <span class="k">sync</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># sync passwords, logs, work folders with SMC</span><br>
+        mgmt.exe <span class="k">screen_shot</span> &nbsp;&nbsp;&nbsp;<span class="c"># capture screenshot</span><br>
+        mgmt.exe <span class="k">scan_nics</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># disable unauthorized network interfaces</span><br>
+        mgmt.exe <span class="k">apply_group_policy</span> &nbsp;<span class="c"># reapply lockdown</span><br>
+        mgmt.exe <span class="k">apply_firewall_policy</span><br>
+        mgmt.exe <span class="k">help</span> &lt;command&gt; &nbsp;<span class="c"># get help</span>
+      </div>
+    </div>
+    <div class="tab-panel" id="mgmt-2">
+      <div class="grid-3">
+        <div class="card"><h3>Users</h3><p>Create, enable, disable, remove Windows accounts.</p></div>
+        <div class="card"><h3>Network</h3><p>Approve / disapprove NICs, lock to subnets.</p></div>
+        <div class="card"><h3>Policy</h3><p>Group Policy & firewall rule application.</p></div>
+        <div class="card"><h3>Permissions</h3><p>Registry & folder ACL management.</p></div>
+        <div class="card"><h3>Sync</h3><p>Two-way data sync with SMC.</p></div>
+        <div class="card"><h3>Time</h3><p>System time synchronization.</p></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="mgmt-3">
+      <div class="feature-list">
+        <div class="feature-item"><span class="ficon">🔍</span><div class="ftext"><strong>list_approved_nics / list_system_nics</strong><span>See exactly which network adapters are recognized and which are allowed.</span></div></div>
+        <div class="feature-item"><span class="ficon">📺</span><div class="ftext"><strong>show_trace</strong><span>Real-time console view into OPE Service activity — invaluable for support calls.</span></div></div>
+        <div class="feature-item"><span class="ficon">🔧</span><div class="ftext"><strong>set_log_level &lt;1-5&gt;</strong><span>Crank up verbosity when you need to reproduce a problem.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. OPE LMS desktop -->
+  <section class="slide" data-notes="This is the student-facing application. Built in Qt6, runs on Windows. It authenticates to Canvas via OAuth2 when connectivity is available, downloads courses, files, and discussions, and serves them from a local web server when the network is gone. Students see something that looks and feels like Canvas — because it IS Canvas, cached.">
+    <div class="tag">Laptop Tool 4 of 4</div>
+    <h2><span class="h2-ico h2-emoji" aria-hidden="true">🎓</span>OPE LMS — the offline-capable desktop client</h2>
+    <p class="lead">A Qt6-based Windows application that gives students Canvas <em>without</em> needing Canvas to be reachable at that moment.</p>
+    <div class="split">
+      <div>
+        <h3>What students get</h3>
+        <div class="feature-list">
+          <div class="feature-item"><span class="ficon">📂</span><div class="ftext"><strong>Browse cached courses</strong><span>Modules, files, pages — fully navigable offline.</span></div></div>
+          <div class="feature-item"><span class="ficon">📝</span><div class="ftext"><strong>Work on assignments</strong><span>Draft offline, submit when the network returns.</span></div></div>
+          <div class="feature-item"><span class="ficon">💬</span><div class="ftext"><strong>Participate in discussions</strong><span>Read and post within facility-permitted boundaries.</span></div></div>
+          <div class="feature-item"><span class="ficon">🎬</span><div class="ftext"><strong>Rich media</strong><span>Optional QtWebEngine build supports MP4 for educational video.</span></div></div>
+        </div>
+      </div>
+      <div>
+        <h3>How it works under the hood</h3>
+        <div class="feature-list">
+          <div class="feature-item"><span class="ficon">🔐</span><div class="ftext"><strong>OAuth2 to Canvas</strong><span>Authenticates with the token issued by SMC during credentialing.</span></div></div>
+          <div class="feature-item"><span class="ficon">💾</span><div class="ftext"><strong>SQLite + local cache</strong><span>Course content downloads to a configurable drive (e.g. D:).</span></div></div>
+          <div class="feature-item"><span class="ficon">🌐</span><div class="ftext"><strong>Built-in HTTP server</strong><span>Serves cached pages locally so Canvas content renders natively.</span></div></div>
+          <div class="feature-item"><span class="ficon">🔄</span><div class="ftext"><strong>Sync on reconnect</strong><span>Uploads work, pulls new materials, refreshes announcements.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. End-to-end story -->
+  <section class="slide" data-notes="Walk through the lifecycle so staff can see how the components compose. Image with FOG, credential it once, hand it to a student. Student logs in, syncs Canvas, takes courses offline. Work flows back via SMC. Audit data is always there. This is the loop your facility will run hundreds of times — and once they've seen it once, it's intuitive.">
+    <div class="tag">A day in the life</div>
+    <h2>How it all flows together</h2>
+    <p class="lead">A single student's journey through the OPE platform — from a fresh laptop to a graded assignment.</p>
+    <div class="feature-list">
+      <div class="feature-item"><span class="ficon">1️⃣</span><div class="ftext"><strong>Operator credentials the laptop</strong><span>credential.exe verifies BIOS lockdown, creates the student account, pulls a Canvas token from SMC, installs OPE Service, re-locks the device.</span></div></div>
+      <div class="feature-item"><span class="ficon">2️⃣</span><div class="ftext"><strong>Student signs in</strong><span>OPE LMS launches, authenticates to Canvas using the stored token, and downloads enrolled courses to the local cache.</span></div></div>
+      <div class="feature-item"><span class="ficon">3️⃣</span><div class="ftext"><strong>Student works — connected or not</strong><span>Reads modules, drafts essays, takes quizzes from cache. OPE Service screenshots and verifies compliance in the background.</span></div></div>
+      <div class="feature-item"><span class="ficon">4️⃣</span><div class="ftext"><strong>Network window opens</strong><span>mgmt sync pushes completed work and screenshots to SMC; OPE LMS uploads submissions to Canvas; new content comes down.</span></div></div>
+      <div class="feature-item"><span class="ficon">5️⃣</span><div class="ftext"><strong>Faculty grades in Canvas</strong><span>Same SpeedGrader, same rubrics, same workflow as any other campus.</span></div></div>
+    </div>
+  </section>
+
+  <!-- 14. Security -->
+  <section class="slide" data-notes="Pause here. Most staff questions are about security and accountability — this slide is the answer. Emphasize that controls are continuous (not one-time), that everything is logged, and that the system is open source so it can be audited. Every control was designed assuming the device may be lost, the network may be hostile, and the student is creative.">
+    <div class="tag">Why corrections IT can say yes</div>
+    <h2>🔒 Security posture</h2>
+    <p class="lead">Every piece was designed with compliance and security in mind.</p>
+    <div class="grid-3">
+      <div class="card"><span class="icon">🚫</span><h3>NIC allowlisting</h3><p>Only approved network adapters on approved subnets are enabled. Unknown adapters are auto-disabled on plug-in.</p></div>
+      <div class="card"><span class="icon">🧱</span><h3>Firewall automation</h3><p>Firewall rules are applied at credentialing and re-applied on schedule by OPE Service.</p></div>
+      <div class="card"><span class="icon">📜</span><h3>Group Policy</h3><p>Lockdown policies enforced and continuously verified, not just at imaging time.</p></div>
+      <div class="card"><span class="icon">👥</span><h3>Account discipline</h3><p>Student account lifecycle managed centrally; no shared logins, no privilege creep.</p></div>
+      <div class="card"><span class="icon">🔑</span><h3>Registry & ACL resets</h3><p>Permissions snap back to baseline on a recurring schedule.</p></div>
+      <div class="card"><span class="icon">🔌</span><h3>USB event monitoring</h3><p>Plug events trigger policy verification — not silently allowed.</p></div>
+      <div class="card"><span class="icon">📸</span><h3>Periodic screenshots</h3><p>Time-stamped supervision evidence in <code style="color:var(--accent-2)">%PROGRAMDATA%\ope\screenshots</code>.</p></div>
+      <div class="card"><span class="icon">🪵</span><h3>Comprehensive logging</h3><p>Every tool writes to its own log under <code style="color:var(--accent-2)">%PROGRAMDATA%\ope\logs</code>.</p></div>
+      <div class="card"><span class="icon">🔐</span><h3>Secret hygiene</h3><p>SMC admin passwords live in the Windows Credential Vault; Canvas keys in <code style="color:var(--accent-2)">.secrets.yml</code>, out of source control.</p></div>
+    </div>
+  </section>
+
+  <!-- 15. Open source -->
+  <section class="slide" data-notes="OPE is built on industry-standard open source — Canvas, Docker, PostgreSQL, Qt — and is itself open source. That means no per-seat licensing, full visibility for security review, and the ability to adapt the platform to your facility's policy. Shared improvements benefit every adopting state. The public roadmap and issue tracker live on GitHub.">
+    <div class="tag">Built for peer states to adopt</div>
+    <h2>🤝 Open source by design</h2>
+    <p class="lead">Every component is on GitHub. Every change is auditable. Every facility can adapt it.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>What that means for you</h3>
+        <ul>
+          <li>No per-seat licensing — budget grows with capacity, not with vendor margin</li>
+          <li>Full source visibility for security review</li>
+          <li>Run on commodity Linux hardware in your own facility</li>
+          <li>Adopt the parts you need; ignore the parts you don't</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What that means for the community</h3>
+        <ul>
+          <li>Shared improvements benefit every adopting state</li>
+          <li>Public issue tracker</li>
+          <li>Built on industry-standard open source — Canvas, Docker, PostgreSQL, Qt</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16. Q&A / Resources -->
+  <section class="slide title-slide" data-notes="Close with resources. Encourage staff to bookmark the repos. Offer to share this deck and to schedule a hands-on session. Invite questions — about deployment, security, integrations with existing systems, or anything else that wasn't covered.">
+    <h1 style="font-size:3.4rem">Questions &amp; Resources</h1>
+    <p class="subtitle">Explore the code, the docs, and the conversation.</p>
+    <div class="links" style="max-width:640px;width:100%;text-align:left">
+      <a href="https://github.com/open-prison-education/ope-server/" target="_blank">🖥️ &nbsp; OPE Server — the containerized classroom stack</a>
+      <a href="https://github.com/open-prison-education/ope-laptop-tools/" target="_blank">💻 &nbsp; OPE Laptop Tools — credential, mgmt, service, sshot</a>
+      <a href="https://github.com/open-prison-education/ope-lms/" target="_blank"><span class="link-ico link-emoji" aria-hidden="true">🎓</span> OPE LMS — the offline-capable desktop client</a>
+      <a href="https://github.com/operepo/smc" target="_blank"><span class="link-ico link-emoji" aria-hidden="true">🎓</span> SMC — Student Management Console</a>
+    </div>
+    <p class="meta">Thank you. Press <strong>O</strong> to navigate to other slides, or <strong>←</strong> to step back.</p>
+  </section>
+
+</div>
+
+<div class="hud">
+  <button id="prevBtn" title="Previous (←)">‹</button>
+  <span class="counter" id="counter">1 / 16</span>
+  <button id="nextBtn" title="Next (→)">›</button>
+</div>
+<div class="dots" id="dots"></div>
+<div class="khint">← → arrows · Home · N notes · O overview · F fullscreen</div>
+
+<aside class="notes" id="notes" aria-live="polite">
+  <h5>📝 Speaker notes · <span id="notesSlide">1</span> of <span id="notesTotal">1</span></h5>
+  <div id="notesBody"><p style="color:var(--muted)">No notes for this slide.</p></div>
+</aside>
+
+<div class="overview" id="overview">
+  <div class="overview-grid" id="overviewGrid"></div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const dotsWrap = document.getElementById('dots');
+  const notesEl = document.getElementById('notes');
+  const notesBody = document.getElementById('notesBody');
+  const notesSlide = document.getElementById('notesSlide');
+  const notesTotal = document.getElementById('notesTotal');
+  const btnNotes = document.getElementById('btnNotes');
+  const btnOverview = document.getElementById('btnOverview');
+  const btnFull = document.getElementById('btnFull');
+  const overview = document.getElementById('overview');
+  const overviewGrid = document.getElementById('overviewGrid');
+  notesTotal.textContent = total;
+  let current = 0;
+
+  // slide titles for overview
+  const slideTitles = [
+    'Welcome', 'The Problem', 'The Solution', 'Architecture', 'OPE Server',
+    'Canvas LMS', 'SMC', 'Approved URL search', 'Credential', 'OPE Service', 'Management CLI',
+    'OPE LMS Desktop', 'Day in the Life', 'Security', 'Open Source', 'Q&A / Resources'
+  ];
+
+  // build overview thumbnails
+  slides.forEach((s,i)=>{
+    const t = document.createElement('div');
+    t.className = 'thumb';
+    const noteText = s.dataset.notes || '';
+    const snippet = noteText.split('.').slice(0,1).join('.') + (noteText ? '.' : '');
+    t.innerHTML = `
+      <div class="tn">${String(i+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</div>
+      <h4>${slideTitles[i] || 'Slide ' + (i+1)}</h4>
+      <p>${snippet || 'No notes'}</p>`;
+    t.addEventListener('click', ()=>{ goToSlide(i); toggleOverview(); });
+    overviewGrid.appendChild(t);
+  });
+
+  // build dots
+  slides.forEach((_,i)=>{
+    const b = document.createElement('button');
+    b.className = 'dot' + (i===0?' active':'');
+    b.title = 'Slide ' + (i+1);
+    b.addEventListener('click', ()=>goToSlide(i));
+    dotsWrap.appendChild(b);
+  });
+  const dots = document.querySelectorAll('.dot');
+
+  function render(){
+    slides.forEach((s,i)=>{
+      s.classList.remove('active','prev');
+      if(i===current) s.classList.add('active');
+      else if(i<current) s.classList.add('prev');
+    });
+    dots.forEach((d,i)=>d.classList.toggle('active', i===current));
+    counter.textContent = (current+1) + ' / ' + total;
+    progress.style.width = ((current+1)/total*100) + '%';
+    const note = slides[current].dataset.notes || '';
+    notesSlide.textContent = current+1;
+    notesBody.innerHTML = note
+      ? '<p>' + note + '</p>'
+      : '<p style="color:var(--muted)">No notes for this slide.</p>';
+  }
+  function goToSlide(i){
+    current = Math.max(0, Math.min(total-1, i));
+    render();
+  }
+  function next(){ goToSlide(current+1); }
+  function prev(){ goToSlide(current-1); }
+
+  document.getElementById('nextBtn').addEventListener('click', next);
+  document.getElementById('prevBtn').addEventListener('click', prev);
+
+  function toggleNotes(){
+    notesEl.classList.toggle('show');
+    btnNotes.classList.toggle('active');
+  }
+  function toggleFullscreen(){
+    if(!document.fullscreenElement){
+      (document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen)?.call(document.documentElement);
+    } else {
+      (document.exitFullscreen||document.webkitExitFullscreen)?.call(document);
+    }
+  }
+  function toggleOverview(){
+    overview.classList.toggle('show');
+    btnOverview.classList.toggle('active');
+  }
+  btnNotes.addEventListener('click', toggleNotes);
+  btnOverview.addEventListener('click', toggleOverview);
+  btnFull.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', ()=>{
+    btnFull.classList.toggle('active', !!document.fullscreenElement);
+  });
+
+  document.addEventListener('keydown', e=>{
+    const tag = (e.target.tagName||'').toLowerCase();
+    if(tag==='input' || tag==='textarea') return;
+    if(e.key==='ArrowRight' || e.key===' ' || e.key==='PageDown') next();
+    else if(e.key==='ArrowLeft' || e.key==='PageUp') prev();
+    else if(e.key==='Home') goToSlide(0);
+    else if(e.key==='End') goToSlide(total-1);
+    else if(e.key==='n' || e.key==='N') toggleNotes();
+    else if(e.key==='o' || e.key==='O') toggleOverview();
+    else if(e.key==='f' || e.key==='F') toggleFullscreen();
+    else if(e.key==='Escape'){
+      notesEl.classList.remove('show'); btnNotes.classList.remove('active');
+      overview.classList.remove('show'); btnOverview.classList.remove('active');
+    }
+  });
+
+  // tabs
+  document.querySelectorAll('.tabs').forEach(group=>{
+    const tabs = group.querySelectorAll('.tab');
+    tabs.forEach(t=>{
+      t.addEventListener('click', ()=>{
+        const target = t.dataset.target;
+        // siblings in same group
+        tabs.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        // panels: any panel whose id matches the prefix
+        const parentSlide = t.closest('.slide');
+        parentSlide.querySelectorAll('.tab-panel').forEach(p=>{
+          // only flip panels that share the prefix of this group's tabs
+          const groupPrefix = target.split('-')[0];
+          if(p.id.startsWith(groupPrefix + '-')){
+            p.classList.toggle('active', p.id===target);
+          }
+        });
+      });
+    });
+  });
+
+  // touch swipe
+  let touchX=null;
+  document.addEventListener('touchstart', e=>{ touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e=>{
+    if(touchX===null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx)>50){ dx<0 ? next() : prev(); }
+    touchX=null;
+  });
+
+  render();
+</script>
+</body>
+</html>
