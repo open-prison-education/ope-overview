@@ -155,6 +155,22 @@
   }
   .codestrip .c{color:#6b7c93}
   .codestrip .k{color:var(--accent)}
+  .codestrip .code-line{display:block;line-height:1.65}
+  .codestrip .code-line + .code-line{margin-top:4px}
+
+  /* credential slide: features + workflow side by side */
+  .credential-body{
+    display:grid;grid-template-columns:1fr minmax(280px,.9fr);
+    gap:28px;align-items:start;margin-top:10px;
+  }
+  .credential-body .feature-list{grid-column:1;grid-row:1;margin-top:0;gap:10px}
+  .credential-body .feature-item{padding:11px 14px}
+  .credential-body .codestrip{
+    grid-column:2;grid-row:1;margin-top:0;align-self:start;
+    position:sticky;top:0;
+  }
+  .slide-credential h2{margin-bottom:16px}
+  .slide-credential .lead{margin-bottom:14px;font-size:1.15rem}
 
   /* title slide */
   .title-slide{justify-content:center;align-items:center;text-align:center}
@@ -335,7 +351,7 @@
     .slide{padding:40px 28px}
     h1{font-size:2rem}.title-slide h1{font-size:2.6rem}
     h2{font-size:1.5rem}
-    .grid-2,.grid-3,.grid-4,.split{grid-template-columns:1fr}
+    .grid-2,.grid-3,.grid-4,.split,.credential-body{grid-template-columns:1fr}
     .hero{grid-template-columns:1fr;gap:24px}
     .hero-visual{height:320px}
     .hero-left h1{font-size:2.4rem}
@@ -435,7 +451,7 @@
         <div class="feature-list">
           <div class="feature-item"><span class="ficon emoji">🎓</span><div class="ftext"><strong>OPE Server</strong><span>Containerized full-stack environment</span></div></div>
           <div class="feature-item"><span class="ficon"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-canvas"/></svg></span><div class="ftext"><strong>Canvas LMS</strong><span>The student & faculty experience</span></div></div>
-          <div class="feature-item"><span class="ficon emoji">🎓</span><div class="ftext"><strong>SMC</strong><span>Admin console for users & content sync</span></div></div>
+          <div class="feature-item"><span class="ficon emoji">🎓</span><div class="ftext"><strong>Student Management Console (SMC)</strong><span>Admin console for users & content sync</span></div></div>
           <div class="feature-item"><span class="ficon">🔎</span><div class="ftext"><strong>Approved URL search</strong><span>Curated entry point for the web</span></div></div>
         </div>
       </div>
@@ -541,7 +557,7 @@
       <div class="grid-2">
         <div class="card"><h3>Host OS</h3><p>Linux server (Ubuntu 20.04+ recommended).</p></div>
         <div class="card"><h3>Runtime</h3><p>Docker Engine 20.10+, Docker Compose v2+, Python 3.6+.</p></div>
-        <div class="card"><h3>Memory</h3><p>16 GB RAM minimum.</p></div>
+        <div class="card"><h3>Memory</h3><p>8 GB RAM minimum.</p></div>
         <div class="card"><h3>Storage</h3><p>500 GB+ (varies with content libraries selected).</p></div>
       </div>
     </div>
@@ -635,22 +651,24 @@
   </section>
 
   <!-- 9. Credential -->
-  <section class="slide" data-notes="credential.exe is run once per laptop, as administrator — it's the 'imaging finish line.' After FOG images a generic Windows 10/11 laptop, this is what turns it into a corrections-grade student device. It validates BIOS lockdown, applies the security baseline, creates the student account, fetches the Canvas token, installs the OPE Service, and re-locks the device. Then the operator walks away.">
+  <section class="slide slide-credential" data-notes="credential.exe is run once per laptop, as administrator — it's the 'imaging finish line.' After FOG images a generic Windows 10/11 laptop, this is what turns it into a corrections-grade student device. It validates BIOS lockdown, applies the security baseline, creates the student account, fetches the Canvas token, installs the OPE Service, and re-locks the device. Then the operator walks away.">
     <div class="tag">Laptop Tool 1 of 4</div>
     <h2>🪪 Credential — first-touch device onboarding</h2>
     <p class="lead">A Windows provisioning tool (<code style="color:var(--accent)">credential.exe</code>) that takes a freshly imaged laptop and prepares it for a specific student, end to end.</p>
-    <div class="feature-list">
+    <div class="credential-body">
+      <div class="codestrip">
+        <span class="code-line"><span class="c"># operator's workflow, abbreviated</span></span>
+        <span class="code-line">1) edit credential_config.json &nbsp;&nbsp;<span class="c">// student username, AD DN, approved NICs</span></span>
+        <span class="code-line">2) right-click credential.exe → <span class="k">Run as administrator</span></span>
+        <span class="code-line">3) review summary &amp; confirm &nbsp;&nbsp;<span class="c">// then walk away</span></span>
+      </div>
+      <div class="feature-list">
       <div class="feature-item"><span class="ficon">✅</span><div class="ftext"><strong>Validates configuration</strong><span>Confirms BIOS lockdown, admin privileges, and a complete JSON config.</span></div></div>
       <div class="feature-item"><span class="ficon">🛡️</span><div class="ftext"><strong>Applies security baselines</strong><span>Sets firewall rules, group policy, Defender exclusions, and registry-based settings for downstream services.</span></div></div>
       <div class="feature-item"><span class="ficon">👤</span><div class="ftext"><strong>Creates the student account</strong><span>Verifies against Active Directory, then builds a locked-down Windows user profile.</span></div></div>
       <div class="feature-item"><span class="ficon">🔑</span><div class="ftext"><strong>Authenticates with Canvas</strong><span>Fetches a Canvas access token from SMC and stores it securely for the desktop LMS client.</span></div></div>
       <div class="feature-item"><span class="ficon"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#icon-windows"/></svg></span><div class="ftext"><strong>Installs supporting services</strong><span>Drops the OPE Service into Windows, then re-locks the device so it ships ready for the student.</span></div></div>
-    </div>
-    <div class="codestrip">
-      <span class="c"># operator's workflow, abbreviated</span><br>
-      1) edit credential_config.json &nbsp;&nbsp;<span class="c">// student username, AD DN, approved NICs</span><br>
-      2) right-click credential.exe → <span class="k">Run as administrator</span><br>
-      3) review summary &amp; confirm &nbsp;&nbsp;<span class="c">// then walk away</span>
+      </div>
     </div>
   </section>
 
@@ -763,9 +781,8 @@
     <div class="feature-list">
       <div class="feature-item"><span class="ficon">1️⃣</span><div class="ftext"><strong>Operator credentials the laptop</strong><span>credential.exe verifies BIOS lockdown, creates the student account, pulls a Canvas token from SMC, installs OPE Service, re-locks the device.</span></div></div>
       <div class="feature-item"><span class="ficon">2️⃣</span><div class="ftext"><strong>Student signs in</strong><span>OPE LMS launches, authenticates to Canvas using the stored token, and downloads enrolled courses to the local cache.</span></div></div>
-      <div class="feature-item"><span class="ficon">3️⃣</span><div class="ftext"><strong>Student works — connected or not</strong><span>Reads modules, drafts essays, takes quizzes from cache. OPE Service screenshots and verifies compliance in the background.</span></div></div>
-      <div class="feature-item"><span class="ficon">4️⃣</span><div class="ftext"><strong>Network window opens</strong><span>mgmt sync pushes completed work and screenshots to SMC; OPE LMS uploads submissions to Canvas; new content comes down.</span></div></div>
-      <div class="feature-item"><span class="ficon">5️⃣</span><div class="ftext"><strong>Faculty grades in Canvas</strong><span>Same SpeedGrader, same rubrics, same workflow as any other campus.</span></div></div>
+      <div class="feature-item"><span class="ficon">3️⃣</span><div class="ftext"><strong>Student works — connected or not</strong><span>Reads modules, and drafts essays from OPE-LMS client. OPE Service screenshots and verifies compliance in the background.</span></div></div>
+      <div class="feature-item"><span class="ficon">4️⃣</span><div class="ftext"><strong>Faculty grades in Canvas</strong><span>Same workflow as any other campus.</span></div></div>
     </div>
   </section>
 
